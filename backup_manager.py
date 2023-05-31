@@ -1,4 +1,5 @@
 import configparser
+import argparse
 import subprocess
 import requests
 import logging
@@ -6,9 +7,9 @@ import os
 
 
 class BackupManager:
-    def __init__(self) -> None:
-        #self.backup_file  "/export/PLEXMEDIA/backup.img"
+    def __init__(self, backup_file) -> None:
         self.backup_file = "/export/1TB/plexserver-backup/backup.img"
+        self.backup_file = backup_file
         self.backup_command = f"sudo dd if=/dev/mmcblk0 of={self.backup_file} bs=1M"
         self._init_logger()
         self.load_telegram_config()
@@ -130,5 +131,10 @@ class BackupManager:
 
 
 if __name__ == "__main__":
-    backup_manager = BackupManager()
+    parser = argparse.ArgumentParser(description="Backup Manager")
+    parser.add_argument("backup_file", help="Backup image location")
+
+    args = parser.parse_args()
+
+    backup_manager = BackupManager(args.backup_file)
     backup_manager.run_backup("PlexServer")
