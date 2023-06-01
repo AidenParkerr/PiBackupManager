@@ -8,7 +8,6 @@ import os
 
 class BackupManager:
     def __init__(self, backup_file) -> None:
-        self.backup_file = "/export/1TB/plexserver-backup/backup.img"
         self.backup_file = backup_file
         self.backup_command = f"sudo dd if=/dev/mmcblk0 of={self.backup_file} bs=1M"
         self._init_logger()
