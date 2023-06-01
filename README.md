@@ -28,6 +28,9 @@ The script requires Python 3 and the following Python packages:
 - `requests`
 - `logging`
 - `os`
+- `fcntl`
+- `signal`
+- `time`
 
 These packages are included in the standard Python 3 library.
 
