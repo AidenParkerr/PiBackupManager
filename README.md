@@ -14,7 +14,7 @@ The Backup Manager is a Python script that automates the process of backing up y
 
 The script requires the following Python packages:
 - `configparser`
-- `argsparse`
+- `argparse`
 - `subprocess`
 - `requests`
 - `logging`
