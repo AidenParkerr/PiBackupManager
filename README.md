@@ -1,3 +1,9 @@
+    
+    
+    
+    
+    
+    
 # Backup Manager
 
 The Backup Manager is a Python script that automates the process of backing up a device (such as a Raspberry Pi's SD card). This script utilizes the Telegram API to send notifications about the backup process, making it easier to monitor its progress and status.## Features
@@ -15,18 +21,13 @@ The Backup Manager is a Python script that automates the process of backing up a
 
 ## Requirements
 
-
 The script requires Python 3 and the following Python packages:
-
-- configparser
-- argparse
-- subprocess
-- requests
-- logging
-- os
-- fcntl
-- signal
-- time
+- `configparser`
+- `argparse`
+- `subprocess`
+- `requests`
+- `logging`
+- `os`
 
 These packages are included in the standard Python 3 library.
 
@@ -60,6 +61,4 @@ The arguments are as follows:
 - `timeout`: The timeout for the backup and compression processes in seconds.
 
 If any arguments are not provided, the script will use default values (excluding `backup_file` and `config_file`). The default device name is "device1", and the default timeout is 3600 seconds (1 hour).
-
-
 
