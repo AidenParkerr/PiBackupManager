@@ -50,7 +50,7 @@ Please note that the `config.ini` file should not be shared or uploaded to publi
 You can run the script with the following command:
 
 ```
-python3 backup_manager.py --backup_file <backup file path> --config_file <config file path> --device_name <device name> --timeout <timeout in seconds>
+python3 backup_manager.py --backup_file <backup file path> --config_file <config file path> --device_name <device name> --timeout <timeout in seconds> --block_size <block size>
 ```
 
 The default device name for notifications is "PlexServer". If you want to use a different device name, you can change the argument in the `run_backup` function at the bottom of the script.
@@ -62,5 +62,6 @@ The arguments are as follows:
 - `config_file`: The path to the configuration file (config.ini).
 - `device_name`: The name of the device being backed up.
 - `timeout`: The timeout for the backup and compression processes in seconds.
+- `block_size`: The block size for data transfer in kilobytes (4096).
 
 If any arguments are not provided, the script will use default values (excluding `backup_file` and `config_file`). The default device name is "device1", and the default timeout is 3600 seconds (1 hour). For back8ng up large capacity storage mediums, consider a greater timeout as a backup could be cut off prematurely.
