@@ -12,32 +12,24 @@ import time
 class BackupManager:
     def __init__(
             self,
-            backup_file: str,
+            backup_dest: str,
             config_path: str,
             device_name: str,
-            timeout: int) -> None:
-        if not os.path.isdir(os.path.dirname(backup_file)):
-            os.makedirs(os.path.dirname(backup_file))
-        if not os.path.isdir(os.path.dirname(config_path)):
-            os.makedirs(os.path.dirname(config_path))
-        self.backup_file: str = backup_file
+            timeout: int,
+            block_size: int) -> None:
+        if not os.path.isdir(os.path.dirname(backup_dest)):
+            os.makedirs(os.path.dirname(backup_dest)) # create backup directory
+        self.backup_dest: str = backup_dest
         self.config_path: str = config_path
         self.device_name: str = device_name
         self.timeout: int = timeout
-        self.backup_command: str = f"sudo dd if=/dev/mmcblk0 of={self.backup_file} bs=1M"
+        self.block_size: int = block_size
+        self.backup_command: str = f"sudo dd if=/dev/mmcblk0 of={self.backup_dest} bs=1M"
         self.lock_file: str = "/tmp/backup_manager.lock"
         self._init_logger()
         self.load_telegram_config()
         signal.signal(signal.SIGINT, self._signal_handler)
         signal.signal(signal.SIGTERM, self._signal_handler)
-
-    def _read_config(self):
-        config = configparser.ConfigParser()
-        #config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.ini")
-        config.read(self.config_path)
-
-        self.bot_token = config['Telegram']['bot_token'].strip('"')
-        self.chat_id = config['Telegram']['chat_id'].strip('"')
 
     def _init_logger(self) -> None:
         self.logger = logging.getLogger(__name__)
@@ -64,13 +56,8 @@ class BackupManager:
 
         self.logger.addHandler(file_handler)
         self.logger.addHandler(console_handler)
-
-    def _signal_handler(self, signum, frame) -> None:
-        self.logger.info("Received signal to stop backup process. Exiting...")
-        self.send_notification("*Backup process stopped.*")
-        self.cleanup(True)
-        exit(0)
-
+        
+        
     def load_telegram_config(self):
         self.logger.info("Loading Telegram bot token and chat ID...")
         self._read_config()
@@ -80,8 +67,24 @@ class BackupManager:
                 "Telegram bot token or chat ID not found. Exiting...")
             raise ValueError("Telegram bot token or chat ID not found.")
 
-        self.logger.info("Telegram bot token and chat ID loaded.")
+        self.logger.info("Telegram bot token and chat ID loaded.")       
+        
+    
+    def _signal_handler(self, signum, frame) -> None:
+        self.logger.info("Received signal to stop backup process. Exiting...")
+        self.send_notification("*Backup process stopped.*")
+        self.cleanup(True)
+        exit(0)
+         
+         
+    def _read_config(self):
+        config = configparser.ConfigParser()
+        #config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.ini")        
+        config.read(self.config_path)
 
+        self.bot_token = config['Telegram']['bot_token'].strip('"')
+        self.chat_id = config['Telegram']['chat_id'].strip('"')
+        
     def send_notification(self, body: str) -> None:
         try:
             self.logger.info(f"Sending Notification to Telegram: '{body}'")
@@ -108,11 +111,8 @@ class BackupManager:
                 self.backup_command,
                 shell=True,
                 stderr=subprocess.PIPE,
-                stdout=subprocess.PIPE,
                 timeout=self.timeout)
-            self.logger.debug(
-                "Backup process completed with return code: %d",
-                result.stdout.decode())
+            self.logger.info(f"Result: {result}")
             end = time.time()
             self.logger.info(
                     f"Backup process completed. Time taken: {(end-start)/60:.2f} minutes.")
@@ -131,7 +131,7 @@ class BackupManager:
 
     def execute_gzip(self):
         """Executes the gzip command with error handling."""
-        gzip_command = f"gzip -c {self.backup_file}"
+        gzip_command = f"gzip -c {self.backup_dest}"
         try:
             self.logger.info("Running gzip command...")
             self.send_notification("Attempting to gzip backup image...")
@@ -163,10 +163,10 @@ class BackupManager:
 
     def cleanup(self, error_thrown: bool):
         if error_thrown:
-            if os.path.exists(self.backup_file):
+            if os.path.exists(self.backup_dest):
                 try:
                     self.logger.info("Deleting incomplete backup file...")
-                    os.remove(self.backup_file)
+                    os.remove(self.backup_dest)
                     self.logger.info("Incomplete backup file deleted.")
                 except Exception as e:
                     self.logger.error(
@@ -234,16 +234,16 @@ class BackupManager:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Backup Manager")
+    parser = argparse.ArgumentParser(description="Backup Manager for Raspberry Pi")
     parser.add_argument(
-        "--backup_file",
+        "--backup_dest",
         type=str,
-        help="Backup file location",
+        help="Backup file save path",
         required=True)
     parser.add_argument(
         "--config_file",
         type=str,
-        help="Config file location",
+        help="Config file path",
         required=True)
     parser.add_argument(
         "--device_name",
@@ -255,12 +255,19 @@ if __name__ == "__main__":
         type=int,
         default=3600,
         help="Timeout for backup and compression commands in seconds")
+    parser.add_argument(
+        "--block_size",
+        type=int,
+        default=4096,
+        help="Block size for dd command in bytes")
+    
 
     args = parser.parse_args()
 
     backup_manager = BackupManager(
-        args.backup_file,
+        args.backup_dest,
         args.config_file,
         args.device_name,
-        args.timeout)
+        args.timeout,
+        args.block_size)
     backup_manager.run()
