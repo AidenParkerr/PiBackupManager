@@ -63,5 +63,4 @@ The arguments are as follows:
 - `device_name`: The name of the device being backed up.
 - `timeout`: The timeout for the backup and compression processes in seconds.
 
-If any arguments are not provided, the script will use default values (excluding `backup_file` and `config_file`). The default device name is "device1", and the default timeout is 3600 seconds (1 hour).
-
+If any arguments are not provided, the script will use default values (excluding `backup_file` and `config_file`). The default device name is "device1", and the default timeout is 3600 seconds (1 hour). For back8ng up large capacity storage mediums, consider a greater timeout as a backup could be cut off prematurely.

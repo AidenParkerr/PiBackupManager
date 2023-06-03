@@ -15,7 +15,7 @@ class BackupManager:
             backup_file: str,
             config_path: str,
             device_name: str,
-            timeout=3600) -> None:
+            timeout: int) -> None:
         if not os.path.isdir(os.path.dirname(backup_file)):
             os.makedirs(os.path.dirname(backup_file))
         if not os.path.isdir(os.path.dirname(config_path)):
@@ -140,7 +140,7 @@ class BackupManager:
                 gzip_command,
                 shell=True,
                 stderr=subprocess.STDOUT,
-                timeout=3600)
+                timeout=self.timeout)
             self.logger.info("Compression process completed.")
             self.send_notification("*Compression process completed.*")
             return True
