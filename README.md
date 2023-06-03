@@ -6,7 +6,7 @@
     
 # Backup Manager
 
-The Backup Manager is a Python script that automates the process of backing up a device (such as a Raspberry Pi's SD card). This script utilizes the Telegram API to send notifications about the backup process, making it easier to monitor its progress and status.## Features
+The Backup Manager is a Python script that automates the process of backing up a device (such as a Raspberry Pi's SD card). This script utilizes the Telegram API to send notifications about the backup process, making it easier to monitor its progress and status.
 
 ## Features
 
