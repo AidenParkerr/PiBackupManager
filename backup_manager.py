@@ -115,11 +115,9 @@ class BackupManager:
                 result.stdout.decode())
             end = time.time()
             self.logger.info(
-                "Backup process completed. Time taken: %.2f minutes",
-                (end - start) / 60)
+                    f"Backup process completed. Time taken: {(end-start)/60:.2f} minutes.")
             self.send_notification(
-                "*Backup process completed. Time taken: %.2f minutes*",
-                (end - start) / 60)
+                f"*Backup process completed* Time taken: {(end-start)/60:.2f} minutes.")
             return True
         except subprocess.TimeoutExpired:
             self.logger.error("Backup process timed out.")
@@ -136,6 +134,7 @@ class BackupManager:
         gzip_command = f"gzip -c {self.backup_file}"
         try:
             self.logger.info("Running gzip command...")
+            self.send_notification("Attempting to gzip backup image...")
             subprocess.run(
                 gzip_command,
                 shell=True,
@@ -176,7 +175,7 @@ class BackupManager:
 
             self.send_notification("*Cleaning Done.*")
 
-    def run(self, device_name: str = "device1"):
+    def run(self):
         # Check if another instance of this script is already running
         try:
             lock_file_descriptor = os.open(
@@ -196,7 +195,7 @@ class BackupManager:
 
         try:
             self.send_notification(
-                f"*Starting Backup for device: '{device_name}'...*")
+                f"*Starting Backup for device: '{self.device_name}'...*")
             # Execute backup and compression commands sequentially.
             if not self.execute_backup():
                 # If backup fails, delete the incomplete backup file and exit.
@@ -262,5 +261,6 @@ if __name__ == "__main__":
     backup_manager = BackupManager(
         args.backup_file,
         args.config_file,
+        args.device_name,
         args.timeout)
-    backup_manager.run(args.device_name)
+    backup_manager.run()
