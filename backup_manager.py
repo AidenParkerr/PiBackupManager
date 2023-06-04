@@ -1,3 +1,51 @@
+"""
+A Backup Manager for automating Raspberry Pi SD card backups.
+
+This class encapsulates the functionality for backing up an SD card on a 
+Raspberry Pi device and compressing it using gzip. It also sends notifications 
+to Telegram at various stages of the process.
+
+Attributes
+----------
+backup_dest : str
+    The location where the backup will be saved, the filename will be backup.img
+config_file : str
+    The path to the configuration file that contains the Telegram bot token and chat ID.
+device_name : str
+    The name of the device that is being backed up.
+timeout : int
+    The maximum time to wait for the backup and compression commands to complete before timing out.
+block_size : int
+    The block size in bytes for the dd command used to create the backup.
+
+Methods
+-------
+_init_logger():
+    Initializes the logger with handlers for console and file outputs.
+load_telegram_config():
+    Loads the Telegram bot token and chat ID from the configuration file.
+send_notification(body: str):
+    Sends a notification to a Telegram chat using the configured bot.
+execute_command(command: str, message: str):
+    Executes a given shell command and sends notifications at the start and end of the process.
+execute_backup():
+    Executes the backup command.
+execute_gzip():
+    Executes the compression command.
+cleanup(backup_success: bool, compression_success: bool):
+    Deletes the backup file if either the backup or compression failed.
+run():
+    Entry point for the backup and compression process. 
+    It prevents multiple instances from running simultaneously by using a lock file.
+
+Note
+----
+If the backup or compression process fails, a notification is sent to Telegram.
+If the backup or compression process times out, a notification is sent to Telegram.
+If an exception is raised during the process, a notification is sent to Telegram.
+
+"""
+
 import configparser
 import argparse
 import subprocess
@@ -5,31 +53,24 @@ import requests
 import logging
 import os
 import fcntl
-import signal
+import datetime
 import time
-
 
 class BackupManager:
     def __init__(
             self,
             backup_dest: str,
-            config_path: str,
+            config_file: str,
             device_name: str,
             timeout: int,
             block_size: int) -> None:
-        if not os.path.isdir(os.path.dirname(backup_dest)):
-            os.makedirs(os.path.dirname(backup_dest)) # create backup directory
         self.backup_dest: str = backup_dest
-        self.config_path: str = config_path
+        self.config_file: str = config_file
         self.device_name: str = device_name
         self.timeout: int = timeout
         self.block_size: int = block_size
-        self.backup_command: str = f"sudo dd if=/dev/mmcblk0 of={self.backup_dest} bs=1M"
-        self.lock_file: str = "/tmp/backup_manager.lock"
         self._init_logger()
         self.load_telegram_config()
-        signal.signal(signal.SIGINT, self._signal_handler)
-        signal.signal(signal.SIGTERM, self._signal_handler)
 
     def _init_logger(self) -> None:
         self.logger = logging.getLogger(__name__)
@@ -55,10 +96,12 @@ class BackupManager:
         console_handler.setFormatter(console_format)
 
         self.logger.addHandler(file_handler)
-        self.logger.addHandler(console_handler)
-        
+        self.logger.addHandler(console_handler)    
         
     def load_telegram_config(self):
+        if not os.path.exists(self.config_file):
+            raise ValueError(f"The config file does not exist `{self.config_file}`.")
+    
         self.logger.info("Loading Telegram bot token and chat ID...")
         self._read_config()
 
@@ -69,18 +112,9 @@ class BackupManager:
 
         self.logger.info("Telegram bot token and chat ID loaded.")       
         
-    
-    def _signal_handler(self, signum, frame) -> None:
-        self.logger.info("Received signal to stop backup process. Exiting...")
-        self.send_notification("*Backup process stopped.*")
-        self.cleanup(True)
-        exit(0)
-         
-         
     def _read_config(self):
         config = configparser.ConfigParser()
-        #config_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.ini")        
-        config.read(self.config_path)
+        config.read(self.config_file)
 
         self.bot_token = config['Telegram']['bot_token'].strip('"')
         self.chat_id = config['Telegram']['chat_id'].strip('"')
@@ -99,87 +133,93 @@ class BackupManager:
             self.logger.error(
                 "Failed to send notification to Telegram",
                 exc_info=True)
-
-    def execute_backup(self):
-        """Executes the backup command with error handling."""
+            
+    def execute_command(self, command: str, message: str) -> bool:
         try:
-            self.logger.info("Running backup command...")
-            self.send_notification("*Backup process started.*")
-
-            start = time.time()
-            result = subprocess.run(
-                self.backup_command,
+            self.send_notification(f"*{message.capitalize()} process started.*")
+            self.logger.info(f"Running command: '{command}'...")
+            
+            process = subprocess.Popen(
+                command,
                 shell=True,
-                stderr=subprocess.PIPE,
-                timeout=self.timeout)
-            self.logger.info(f"Result: {result}")
-            end = time.time()
-            self.logger.info(
-                    f"Backup process completed. Time taken: {(end-start)/60:.2f} minutes.")
-            self.send_notification(
-                f"*Backup process completed* Time taken: {(end-start)/60:.2f} minutes.")
-            return True
-        except subprocess.TimeoutExpired:
-            self.logger.error("Backup process timed out.")
-            # add optional argument to determine severity of error. i.e.
-            # critical, warning, info etc.
-            self.send_notification("*ERROR*: Backup process timed out.")
-            return False
-        except Exception as e:
-            self.handle_error(e)
-            return False
+                stderr=subprocess.PIPE)
+            
+            start_time = time.time()
+            last_size = -1
 
-    def execute_gzip(self):
-        """Executes the gzip command with error handling."""
-        gzip_command = f"gzip -k {self.backup_dest}"
-        try:
-            self.logger.info("Running gzip command...")
-            self.send_notification("Attempting to gzip backup image...")
-            subprocess.run(
-                gzip_command,
-                shell=True,
-                stderr=subprocess.STDOUT,
-                timeout=self.timeout)
-            self.logger.info("Compression process completed.")
-            self.send_notification("*Compression process completed.*")
-            return True
-        except subprocess.TimeoutExpired:
-            self.logger.error("Compression process timed out.")
-            self.send_notification("*Compression process timed out.*")
-            return False
-        except Exception as e:
-            self.handle_error(e)
-            return False
+            while True:
+                if process.poll() is not None:  # If the process has finished
+                    stdout, stderr = process.communicate()
+                    break
+                
+                # Check if timeout exceeded
+                if time.time() - start_time > self.timeout:
+                    self.logger.error(f"{message.capitalize()} process timed out.")
+                    self.send_notification(f"*ERROR*: {message.capitalize()} process timed out.")
+                    process.terminate()
+                    return False
 
-    def handle_error(self, e):
-        if isinstance(e, subprocess.CalledProcessError):
-            self.logger.error("Backup or compression process failed.")
-            error_message = f"Backup or compression process failed with error: {e.output.decode()}"
-            self.send_notification(error_message)
-        else:
+                # Check if the file size has changed in the last 5 seconds
+                time.sleep(5)  # adjust sleep duration as needed
+                if os.path.exists(self.backup_file_dest):
+                    current_size = os.path.getsize(self.backup_file_dest)
+                    if current_size != last_size:
+                        last_size = current_size
+                    else:
+                        self.logger.error(f"{message.capitalize()} process stalled.")
+                        self.send_notification(f"*ERROR*: {message.capitalize()} process stalled.")
+                        process.terminate()
+                        return False
+            
+            self.logger.info(f"{message.capitalize()} process completed.")
+            self.send_notification(f"*{message.capitalize()} process completed.*")
+            return True
+
+        except Exception as e:
             self.logger.error(f"Unexpected error: {e}")
             self.send_notification(
                 f"Backup failed due to an unexpected error: {e}")
 
-    def cleanup(self, error_thrown: bool):
-        if error_thrown:
-            if os.path.exists(self.backup_dest):
-                try:
-                    self.logger.info("Deleting incomplete backup file...")
-                    os.remove(self.backup_dest)
-                    self.logger.info("Incomplete backup file deleted.")
-                except Exception as e:
-                    self.logger.error(
-                        f"Failed to delete incomplete backup file. Error: {e}",
-                        exc_info=True)
+        
+            
+    def execute_backup(self):
+        date = datetime.datetime.now().strftime("%Y-%m-%d")
+        self.backup_file_dest = os.path.join(self.backup_dest, f"{date}_{self.device_name}-backup.img")
+        backup_command: str = f"sudo dd if=/dev/mmcblk0 of={self.backup_file_dest} bs={self.block_size}"
+        self.send_notification(
+            f"Starting Backup for device: `{self.device_name}`...")    
+        return self.execute_command(backup_command, "backup")
 
-            self.send_notification("*Cleaning Done.*")
+    def execute_gzip(self):
+        gzip_command: str = f"gzip -k {self.backup_dest}"
+        return self.execute_command(gzip_command, "compression")
+
+    def cleanup(self, backup_success: bool, compression_success: bool) -> None:
+        if not backup_success:
+            backup_file = self.backup_file_dest
+        elif not compression_success:
+            backup_file = self.backup_file_dest + ".gz"
+        else:
+            return
+        
+        if os.path.exists(backup_file):    
+            try:
+                self.logger.info("Deleting incomplete backup file...")
+                os.remove(backup_file)
+                self.logger.info("Incomplete backup file deleted.")
+            except Exception as e:
+                self.logger.error(
+                    f"Failed to delete incomplete backup file. Error: {e}",
+                    exc_info=True)
+
+        self.send_notification("*Cleaning Done.*")
 
     def run(self):
+        lock_file: str = "/tmp/backup_manager.lock"
         # Check if another instance of this script is already running
         try:
             lock_file_descriptor = os.open(
-                self.lock_file, os.O_CREAT | os.O_TRUNC | os.O_WRONLY)
+                lock_file, os.O_CREAT | os.O_TRUNC | os.O_WRONLY)
         except OSError as e:
             self.logger.error(
                 f"Could not open or create lock file: {e}. Exiting...")
@@ -192,40 +232,43 @@ class BackupManager:
             self.logger.error(
                 f"An Instance of this script is already running: {e}. Exiting...")
             return
-
+        
+        # Check if the backup destination exists and is a directory
+        if not (os.path.exists(self.backup_dest) and os.path.isdir(self.backup_dest)):
+            raise ValueError(
+                f"Backup destination '{self.backup_dest}' does not exist or is not a directory.")
+                
+        backup_success = False
+        compression_success = False
+        
         try:
-            self.send_notification(
-                f"*Starting Backup for device: '{self.device_name}'...*")
-            # Execute backup and compression commands sequentially.
-            if not self.execute_backup():
-                # If backup fails, delete the incomplete backup file and exit.
-                self.cleanup(error_thrown=True)
-                return
-
-            if not self.execute_gzip():
-                # If compression fails, delete the incomplete backup file and
-                # exit.
-                self.cleanup(error_thrown=True)
-                return
-
-            # Backup and compression finished successfully.
-            self.logger.info("Backup and compression finished successfully.")
-            self.send_notification(
-                "*Backup and compression finished successfully.*")
+            backup_success = self.execute_backup()
+            if backup_success:
+                compression_success = self.execute_gzip()
+            
         except KeyboardInterrupt:
-            # Catch keyboard interrupt (Ctrl+C) and exit.
             self.logger.error("Backup process interrupted by keyboard.")
-            self.cleanup(error_thrown=True)
+            self.send_notification(
+                "Backup process interrupted by keyboard.")
         except Exception as e:
             # Catch any other exceptions that might have been missed.
-            self.handle_error(e)
-            self.cleanup(error_thrown=True)
+            self.logger.error(f"Unexpected error: {e}")
+            self.send_notification(
+                f"Backup failed due to an unexpected error: {e}")
         finally:
-            # Release the lock on the lock file and delete it.
+            if backup_success and compression_success:
+                self.logger.info(f"DONE - Backup for device `{self.device_name}` completed successfully.")
+                self.send_notification(f"*DONE* - Backup for device `{self.device_name}` completed successfully.")
+            else:
+                # If backup or compression failed, delete the incomplete file(s).
+                self.logger.info("FAIL - Backup was not completed successfully, rolling back changes...")
+                self.send_notification("*FAIL* - Backup was not completed successfully, rolling back changes...")
+                self.cleanup(backup_success, compression_success)
+                
             self.logger.info("Removing lock file...")
             try:
                 os.close(lock_file_descriptor)
-                os.remove(self.lock_file)
+                os.remove(lock_file)
                 self.logger.info("Lock file removed.")
             except Exception as e:
                 self.logger.error(
@@ -238,7 +281,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--backup_dest",
         type=str,
-        help="Backup file save path",
+        help="Backup destination path",
         required=True)
     parser.add_argument(
         "--config_file",
@@ -261,7 +304,6 @@ if __name__ == "__main__":
         default=4096,
         help="Block size for dd command in bytes")
     
-
     args = parser.parse_args()
 
     backup_manager = BackupManager(
