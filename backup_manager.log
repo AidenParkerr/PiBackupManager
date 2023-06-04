@@ -1,16 +1,70 @@
-2023-06-01 20:52:50 - __main__ - INFO - Loading Telegram bot token and chat ID...
-2023-06-01 20:52:50 - __main__ - INFO - Telegram bot token and chat ID loaded.
-2023-06-01 20:52:50 - __main__ - INFO - Sending Notification to Telegram: '*Starting Backup for device: 'device1'...*'
-2023-06-01 20:52:50 - __main__ - INFO - Notification sent to Telegram.
-2023-06-01 20:52:50 - __main__ - INFO - Running backup command...
-2023-06-01 20:52:50 - __main__ - INFO - Sending Notification to Telegram: '*Backup process started.*'
-2023-06-01 20:52:51 - __main__ - INFO - Notification sent to Telegram.
-2023-06-01 20:52:54 - __main__ - INFO - Received signal to stop backup process. Exiting...
-2023-06-01 20:52:54 - __main__ - INFO - Sending Notification to Telegram: '*Backup process stopped.*'
-2023-06-01 20:52:54 - __main__ - INFO - Notification sent to Telegram.
-2023-06-01 20:52:54 - __main__ - INFO - Deleting incomplete backup file...
-2023-06-01 20:52:54 - __main__ - INFO - Incomplete backup file deleted.
-2023-06-01 20:52:54 - __main__ - INFO - Sending Notification to Telegram: '*Cleaning Done.*'
-2023-06-01 20:52:55 - __main__ - INFO - Notification sent to Telegram.
-2023-06-01 20:52:55 - __main__ - INFO - Removing lock file...
-2023-06-01 20:52:55 - __main__ - INFO - Lock file removed.
+2023-06-03 18:28:25 - __main__ - INFO - Loading Telegram bot token and chat ID...
+2023-06-03 18:28:25 - __main__ - INFO - Telegram bot token and chat ID loaded.
+2023-06-03 18:28:25 - __main__ - INFO - Sending Notification to Telegram: '*Starting Backup for device: 'device1'...*'
+2023-06-03 18:28:25 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:28:25 - __main__ - INFO - Running backup command...
+2023-06-03 18:28:25 - __main__ - INFO - Sending Notification to Telegram: '*Backup process started.*'
+2023-06-03 18:28:25 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:28:25 - __main__ - INFO - Backup process completed. Time taken: 0.00 minutes.
+2023-06-03 18:28:25 - __main__ - INFO - Sending Notification to Telegram: '*Backup process completed* Time taken: 0.00 minutes.'
+2023-06-03 18:28:26 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:28:26 - __main__ - INFO - Running gzip command...
+2023-06-03 18:28:26 - __main__ - INFO - Sending Notification to Telegram: 'Attempting to gzip backup image...'
+2023-06-03 18:28:26 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:28:26 - __main__ - INFO - Compression process completed.
+2023-06-03 18:28:26 - __main__ - INFO - Sending Notification to Telegram: '*Compression process completed.*'
+2023-06-03 18:28:26 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:28:26 - __main__ - INFO - Backup and compression finished successfully.
+2023-06-03 18:28:26 - __main__ - INFO - Sending Notification to Telegram: '*Backup and compression finished successfully.*'
+2023-06-03 18:28:26 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:28:26 - __main__ - INFO - Removing lock file...
+2023-06-03 18:28:26 - __main__ - INFO - Lock file removed.
+2023-06-03 18:28:56 - __main__ - INFO - Loading Telegram bot token and chat ID...
+2023-06-03 18:28:56 - __main__ - INFO - Telegram bot token and chat ID loaded.
+2023-06-03 18:28:56 - __main__ - INFO - Sending Notification to Telegram: '*Starting Backup for device: 'device1'...*'
+2023-06-03 18:28:57 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:28:57 - __main__ - INFO - Running backup command...
+2023-06-03 18:28:57 - __main__ - INFO - Sending Notification to Telegram: '*Backup process started.*'
+2023-06-03 18:28:57 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:28:57 - __main__ - INFO - Backup process completed. Time taken: 0.00 minutes.
+2023-06-03 18:28:57 - __main__ - INFO - Sending Notification to Telegram: '*Backup process completed* Time taken: 0.00 minutes.'
+2023-06-03 18:28:57 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:28:57 - __main__ - INFO - Running gzip command...
+2023-06-03 18:28:57 - __main__ - INFO - Sending Notification to Telegram: 'Attempting to gzip backup image...'
+2023-06-03 18:28:57 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:28:57 - __main__ - INFO - Compression process completed.
+2023-06-03 18:28:57 - __main__ - INFO - Sending Notification to Telegram: '*Compression process completed.*'
+2023-06-03 18:28:57 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:28:57 - __main__ - INFO - Backup and compression finished successfully.
+2023-06-03 18:28:57 - __main__ - INFO - Sending Notification to Telegram: '*Backup and compression finished successfully.*'
+2023-06-03 18:28:58 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:28:58 - __main__ - INFO - Removing lock file...
+2023-06-03 18:28:58 - __main__ - INFO - Lock file removed.
+2023-06-03 18:46:28 - __main__ - INFO - Loading Telegram bot token and chat ID...
+2023-06-03 18:46:28 - __main__ - INFO - Telegram bot token and chat ID loaded.
+2023-06-03 18:46:28 - __main__ - INFO - Sending Notification to Telegram: '*Starting Backup for device: 'device1'...*'
+2023-06-03 18:46:28 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:46:28 - __main__ - INFO - Running backup command...
+2023-06-03 18:46:28 - __main__ - INFO - Sending Notification to Telegram: '*Backup process started.*'
+2023-06-03 18:46:29 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:46:29 - __main__ - INFO - Backup process completed. Time taken: 0.00 minutes.
+2023-06-03 18:46:29 - __main__ - INFO - Sending Notification to Telegram: '*Backup process completed* Time taken: 0.00 minutes.'
+2023-06-03 18:46:29 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:46:29 - __main__ - INFO - Running gzip command...
+2023-06-03 18:46:29 - __main__ - INFO - Sending Notification to Telegram: 'Attempting to gzip backup image...'
+2023-06-03 18:46:29 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:46:29 - __main__ - INFO - Compression process completed.
+2023-06-03 18:46:29 - __main__ - INFO - Sending Notification to Telegram: '*Compression process completed.*'
+2023-06-03 18:46:29 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:46:29 - __main__ - INFO - Backup and compression finished successfully.
+2023-06-03 18:46:29 - __main__ - INFO - Sending Notification to Telegram: '*Backup and compression finished successfully.*'
+2023-06-03 18:46:29 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:46:29 - __main__ - INFO - Removing lock file...
+2023-06-03 18:46:29 - __main__ - INFO - Lock file removed.
+2023-06-03 18:51:44 - __main__ - INFO - Loading Telegram bot token and chat ID...
+2023-06-03 18:51:44 - __main__ - INFO - Telegram bot token and chat ID loaded.
+2023-06-03 18:51:44 - __main__ - INFO - Sending Notification to Telegram: '*Starting Backup for device: 'device1'...*'
+2023-06-03 18:51:44 - __main__ - INFO - Notification sent to Telegram.
+2023-06-03 18:51:44 - __main__ - INFO - Running backup command...
+2023-06-03 18:51:44 - __main__ - INFO - Sending Notification to Telegram: '*Backup process started.*'
+2023-06-03 18:51:44 - __main__ - INFO - Notification sent to Telegram.

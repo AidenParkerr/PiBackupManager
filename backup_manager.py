@@ -131,7 +131,7 @@ class BackupManager:
 
     def execute_gzip(self):
         """Executes the gzip command with error handling."""
-        gzip_command = f"gzip -c {self.backup_dest}"
+        gzip_command = f"gzip -k {self.backup_dest}"
         try:
             self.logger.info("Running gzip command...")
             self.send_notification("Attempting to gzip backup image...")
